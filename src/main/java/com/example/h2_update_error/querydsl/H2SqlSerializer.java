@@ -2,15 +2,20 @@ package com.example.h2_update_error.querydsl;
 
 import com.querydsl.core.QueryFlag;
 import com.querydsl.core.QueryMetadata;
+import com.querydsl.core.support.SerializerBase;
 import com.querydsl.core.types.Constant;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.PathImpl;
+import com.querydsl.core.types.dsl.BeanPath;
+import com.querydsl.core.types.dsl.DatePath;
+import com.querydsl.core.types.dsl.DateTimePath;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.sql.Configuration;
 import com.querydsl.sql.RelationalPath;
 import com.querydsl.sql.SQLSerializer;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 
 /**
@@ -63,12 +68,51 @@ public class H2SqlSerializer extends SQLSerializer {
                 constantPaths.add(update.getKey());
             }
 
-            if (update.getValue() instanceof StringPath) {
+            boolean modify = false;
+            int length = 0;
+            String value = "";
+            if (update.getValue() instanceof StringPath || update.getValue() instanceof DateTimePath) {
                 //TODO: try this...
-                //new StringPath(new PathImpl<String>(String.class, ((StringPath) update.getValue()).getMetadata()))
+                /*
+                String value = ((StringPath) update.getValue()).getMetadata().getName();
+                if (!value.startsWith("'")) {
+                    value = "'" + value + "'";
+                }
+                update.setValue(QuerydslUtil.createStringPath((value)));
+                */
+                if (update.getValue() instanceof StringPath) {
+                    value = ((StringPath) update.getValue()).getMetadata().getName();
+                } else {
+                    value = ((DateTimePath) update.getValue()).getMetadata().getName();
+                }
+
+                length = value.length();
+                modify = true;
             }
 
             handle(update.getValue());
+            if (modify) {
+
+                StringBuilder builder = new StringBuilder();
+                try {
+                    Class<?> c = SerializerBase.class;
+                    Field builderField = c.getDeclaredField("builder");
+                    builderField.setAccessible(true);
+                    builder = (StringBuilder) builderField.get(this);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                //System.out.println();
+                if (builder.charAt(builder.length() - 1) == '"') {
+                    System.out.println("TEST!!!");
+                    builder.replace(builder.length() - length - 2, builder.length(), "'" + value + "'");
+                    System.out.println("New builder: " + builder);
+                } else {
+                    builder.replace(builder.length() - length, builder.length(), "'" + value + "'");
+                }
+//                builder.setLength(builder.length() - );
+//                builder.append();
+            }
             first = false;
         }
         skipParent = false;

@@ -90,12 +90,14 @@ public class SimpleUserRepository {
                         .where(users.id.eq(entityFromDatabase.getId()))
                         .set(updateListFields, updateListValues)
                         .execute();
+            } else {
+                queryFactory.update(new RelationalPathBase<User>(users.getType(), users.getMetadata(), "", "users"))
+                        .where(users.id.eq(entityFromDatabase.getId()))
+                        .set(updateListFields, updateListValues)
+                        .execute();
             }
 
-            queryFactory.update(new RelationalPathBase<User>(users.getType(), users.getMetadata(), "", "users"))
-                    .where(users.id.eq(entityFromDatabase.getId()))
-                    .set(updateListFields, updateListValues)
-                    .execute();
+
         } else {
 
             queryFactory
