@@ -2,6 +2,7 @@ package com.example.h2_update_error.dao;
 
 import com.example.h2_update_error.model.QUser;
 import com.example.h2_update_error.model.User;
+import com.example.h2_update_error.querydsl.CustomH2QueryFactory;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.QBean;
@@ -84,6 +85,13 @@ public class SimpleUserRepository {
             if (verificationIdValue!= null)
                 updateListValues.add(Expressions.stringPath(verificationIdValue));
 
+            if (queryFactory instanceof CustomH2QueryFactory) {
+                ((CustomH2QueryFactory) queryFactory).h2Update(new RelationalPathBase<User>(users.getType(), users.getMetadata(), "", "users"))
+                        .where(users.id.eq(entityFromDatabase.getId()))
+                        .set(updateListFields, updateListValues)
+                        .execute();
+            }
+
             queryFactory.update(new RelationalPathBase<User>(users.getType(), users.getMetadata(), "", "users"))
                     .where(users.id.eq(entityFromDatabase.getId()))
                     .set(updateListFields, updateListValues)
@@ -109,6 +117,8 @@ public class SimpleUserRepository {
         }
         if (configuration.getTemplates() instanceof PostgreSQLTemplates) {
             queryFactory = new PostgreSQLQueryFactory(configuration, new DataSourceProvider(dataSource));
+        } else if (configuration.getTemplates() instanceof H2Templates) {
+            queryFactory = new CustomH2QueryFactory(configuration, dataSource);
         }
         else queryFactory = new SQLQueryFactory(configuration, dataSource);
         return queryFactory.select(userBean).from(users);
