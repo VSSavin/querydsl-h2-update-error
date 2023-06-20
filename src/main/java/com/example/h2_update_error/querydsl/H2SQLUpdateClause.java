@@ -29,18 +29,4 @@ public class H2SQLUpdateClause extends SQLUpdateClause {
     protected SQLSerializer createSerializer() {
         return new H2SqlSerializer(configuration, true);
     }
-
-    /*
-
-    @Override
-    protected PreparedStatement createStatement() throws SQLException {
-        //return super.createStatement();
-    }
-
-    @Override
-    protected Collection<PreparedStatement> createStatements() throws SQLException {
-        //return super.createStatements();
-    }
-
-    */
 }
