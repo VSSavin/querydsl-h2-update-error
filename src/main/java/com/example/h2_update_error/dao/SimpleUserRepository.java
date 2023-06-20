@@ -9,6 +9,7 @@ import com.querydsl.core.types.QBean;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.sql.*;
 import com.querydsl.sql.dml.SQLDeleteClause;
+import com.querydsl.sql.dml.SQLUpdateClause;
 import com.querydsl.sql.postgresql.PostgreSQLQueryFactory;
 
 import javax.inject.Provider;
@@ -29,6 +30,8 @@ public class SimpleUserRepository {
 
     private static final QBean<User> userBean = bean(User.class, users.id, users.login, users.name, users.password, users.email,
             users.authority, users.expiration_date, users.verification_id);
+    private static final RelationalPathBase<User> usersRelationalPath =
+            new RelationalPathBase<>(users.getType(), users.getMetadata(), "", "users");
 
     private AbstractSQLQueryFactory<?> queryFactory;
     private final DataSource dataSource;
@@ -85,18 +88,9 @@ public class SimpleUserRepository {
             if (verificationIdValue!= null)
                 updateListValues.add(Expressions.stringPath(verificationIdValue));
 
-            if (queryFactory instanceof CustomH2QueryFactory) {
-                ((CustomH2QueryFactory) queryFactory).h2Update(new RelationalPathBase<User>(users.getType(), users.getMetadata(), "", "users"))
-                        .where(users.id.eq(entityFromDatabase.getId()))
-                        .set(updateListFields, updateListValues)
-                        .execute();
-            } else {
-                queryFactory.update(new RelationalPathBase<User>(users.getType(), users.getMetadata(), "", "users"))
-                        .where(users.id.eq(entityFromDatabase.getId()))
-                        .set(updateListFields, updateListValues)
-                        .execute();
-            }
-
+            prepareUpdateQuery().where(users.id.eq(entityFromDatabase.getId()))
+                    .set(updateListFields, updateListValues)
+                    .execute();
 
         } else {
 
@@ -111,6 +105,15 @@ public class SimpleUserRepository {
 
 
         return user;
+    }
+
+    private SQLUpdateClause prepareUpdateQuery() {
+        if (queryFactory instanceof CustomH2QueryFactory) {
+            return ((CustomH2QueryFactory) queryFactory).h2Update(usersRelationalPath);
+
+        } else {
+            return queryFactory.update(usersRelationalPath);
+        }
     }
 
     private AbstractSQLQuery<User,?> prepareSelectQuery(boolean useLastQueryFactory) {

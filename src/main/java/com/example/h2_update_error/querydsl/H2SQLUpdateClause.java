@@ -8,9 +8,6 @@ import com.querydsl.sql.dml.SQLUpdateClause;
 
 import javax.inject.Provider;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Collection;
 
 /**
  * @author vssavin on 19.06.2023

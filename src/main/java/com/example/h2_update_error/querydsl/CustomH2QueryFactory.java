@@ -4,7 +4,6 @@ import com.querydsl.sql.Configuration;
 import com.querydsl.sql.RelationalPath;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
-import com.querydsl.sql.dml.SQLUpdateClause;
 
 import javax.inject.Provider;
 import javax.sql.DataSource;
